@@ -308,7 +308,7 @@ void parseForecast() {
   weatherData[f_weather_0] = root["forecast"]["simpleforecast"]["forecastday"][0]["conditions"].asString();
   weatherData[f_wind_0] = String("wind ") + 
     root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["dir"].asString() + " " +
-    root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["kph"].asString() + String(char(223)) + "C";
+    root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["kph"].asString();
   weatherData[f_rain_0] = String("regen ") + root["forecast"]["simpleforecast"]["forecastday"][0]["pop"].asString() + "%";
 
   weatherData[f_temp_1] = String("morgen ") + 
