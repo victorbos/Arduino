@@ -15,10 +15,10 @@ const char* wunderground_astronomy = "astronomy/lang:NL";
 const char* wunderground_location = "q/NL/Soest.json";
 
 // update freq in seconds
-const int mainLoopDelay = 10;
-const int intervalConditions = 6 * mainLoopDelay ;
+const int mainLoopDelay = 5;
+const int intervalConditions = 24 * mainLoopDelay ;
 const int intervalAstronomy = 240 * mainLoopDelay;
-const int intervalForecast = 120 * mainLoopDelay;
+const int intervalForecast = 240 * mainLoopDelay;
 int lastUpdateConditions = intervalConditions;
 int lastUpdateAstronomy = intervalAstronomy;
 int lastUpdateForecast = intervalForecast;
@@ -259,11 +259,11 @@ void parseConditions() {
     return;
   }
 
-  weatherData[conditions] = String("Waarnemingen ") + root["response"]["version"].asString();
+  weatherData[conditions] = String("Waarnemingen ");
   weatherData[c_city] = root["current_observation"]["display_location"]["city"].asString();
   weatherData[c_temp] = String("temp ") + root["current_observation"]["temp_c"].asString() + String(char(223)) + "C";
   weatherData[c_tempFeels] = String("voelt als ") + root["current_observation"]["feelslike_c"].asString()  + String(char(223)) + "C";
-  weatherData[c_weather] = String("weer ") + root["current_observation"]["weather"].asString();
+  weatherData[c_weather] = root["current_observation"]["weather"].asString();
   weatherData[c_humidity] = String("vocht ") + root["current_observation"]["relative_humidity"].asString();
   weatherData[c_wind] = String("wind ") + root["current_observation"]["wind_dir"].asString() + " " + root["current_observation"]["wind_kph"].asString();
   weatherData[c_pressure] = String("druk ") + root["current_observation"]["pressure_mb"].asString() + " " + root["current_observation"]["pressure_trend"].asString();
@@ -303,22 +303,22 @@ void parseForecast() {
 
   String version = root["response"]["version"];
   weatherData[f_temp_0] = String("vandaag ") + 
-    root["forecast"]["simpleforecast"]["forecastday"][0]["low"]["celsius"].asString() + "/" +
-    root["forecast"]["simpleforecast"]["forecastday"][0]["high"]["celsius"].asString();
+    root["forecast"]["simpleforecast"]["forecastday"][0]["low"]["celsius"].asString() + "-" +
+    root["forecast"]["simpleforecast"]["forecastday"][0]["high"]["celsius"].asString() + String(char(223)) + "C";
   weatherData[f_weather_0] = root["forecast"]["simpleforecast"]["forecastday"][0]["conditions"].asString();
-  weatherData[f_wind_0] = String("wind v ") + 
-    root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["dir"].asString() + "/" +
-    root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["kph"].asString() ;
-  weatherData[f_rain_0] = String("regen v ") + root["forecast"]["simpleforecast"]["forecastday"][0]["pop"].asString() + "%";
+  weatherData[f_wind_0] = String("wind ") + 
+    root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["dir"].asString() + " " +
+    root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["kph"].asString() + String(char(223)) + "C";
+  weatherData[f_rain_0] = String("regen ") + root["forecast"]["simpleforecast"]["forecastday"][0]["pop"].asString() + "%";
 
   weatherData[f_temp_1] = String("morgen ") + 
-    root["forecast"]["simpleforecast"]["forecastday"][1]["low"]["celsius"].asString() + "/" +
-    root["forecast"]["simpleforecast"]["forecastday"][1]["high"]["celsius"].asString();
+    root["forecast"]["simpleforecast"]["forecastday"][1]["low"]["celsius"].asString() + "-" +
+    root["forecast"]["simpleforecast"]["forecastday"][1]["high"]["celsius"].asString()  + String(char(223)) + "C";
   weatherData[f_weather_1] = root["forecast"]["simpleforecast"]["forecastday"][1]["conditions"].asString();
-  weatherData[f_wind_1] = String("wind m ") + 
-    root["forecast"]["simpleforecast"]["forecastday"][1]["avewind"]["dir"].asString() + "/" +
+  weatherData[f_wind_1] = String("wind ") + 
+    root["forecast"]["simpleforecast"]["forecastday"][1]["avewind"]["dir"].asString() + " " +
     root["forecast"]["simpleforecast"]["forecastday"][1]["avewind"]["kph"].asString() ;
-  weatherData[f_rain_1] = String("regen m ") + root["forecast"]["simpleforecast"]["forecastday"][1]["pop"].asString() +"%";
+  weatherData[f_rain_1] = String("regen ") + root["forecast"]["simpleforecast"]["forecastday"][1]["pop"].asString() +"%";
 
   digitalWrite(dataLedPin, HIGH);
 }
