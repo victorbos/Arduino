@@ -1,0 +1,93 @@
+{
+  "response": {
+  "version":"0.1",
+  "termsofService":"http://www.wunderground.com/weather/api/d/terms.html",
+  "features": {
+  "conditions": 1
+  }
+	}
+  ,	"current_observation": {
+		"image": {
+		"url":"http://icons.wxug.com/graphics/wu2/logo_130x80.png",
+		"title":"Weather Underground",
+		"link":"http://www.wunderground.com"
+		},
+		"display_location": {
+		"full":"Soest, Nederland",
+		"city":"Soest",
+		"state":"",
+		"state_name":"Nederland",
+		"country":"NL",
+		"country_iso3166":"NL",
+		"zip":"00000",
+		"magic":"18",
+		"wmo":"06265",
+		"latitude":"52.17333221",
+		"longitude":"5.29166698",
+		"elevation":"6.00000000"
+		},
+		"observation_location": {
+		"full":"Weerstation Overhees, Soest, UTRECHT",
+		"city":"Weerstation Overhees, Soest",
+		"state":"UTRECHT",
+		"country":"NL",
+		"country_iso3166":"NL",
+		"latitude":"52.172474",
+		"longitude":"5.280017",
+		"elevation":"10 ft"
+		},
+		"estimated": {
+		},
+		"station_id":"IUTRECHT53",
+		"observation_time":"Last Updated on oktober 14, 9:20 PM CEST",
+		"observation_time_rfc822":"Fri, 14 Oct 2016 21:20:44 +0200",
+		"observation_epoch":"1476472844",
+		"local_time_rfc822":"Fri, 14 Oct 2016 21:20:46 +0200",
+		"local_epoch":"1476472846",
+		"local_tz_short":"CEST",
+		"local_tz_long":"Europe/Amsterdam",
+		"local_tz_offset":"+0200",
+		"weather":"Merendeels bewolkt",
+		"temperature_string":"52.5 F (11.4 C)",
+		"temp_f":52.5,
+		"temp_c":11.4,
+		"relative_humidity":"73%",
+		"wind_string":"From the oost at 1.7 MPH Gusting to 6.9 MPH",
+		"wind_dir":"oost",
+		"wind_degrees":93,
+		"wind_mph":1.7,
+		"wind_gust_mph":"6.9",
+		"wind_kph":2.7,
+		"wind_gust_kph":"11.1",
+		"pressure_mb":"1006",
+		"pressure_in":"29.71",
+		"pressure_trend":"0",
+		"dewpoint_string":"44 F (7 C)",
+		"dewpoint_f":44,
+		"dewpoint_c":7,
+		"heat_index_string":"NA",
+		"heat_index_f":"NA",
+		"heat_index_c":"NA",
+		"windchill_string":"NA",
+		"windchill_f":"NA",
+		"windchill_c":"NA",
+		"feelslike_string":"52.5 F (11.4 C)",
+		"feelslike_f":"52.5",
+		"feelslike_c":"11.4",
+		"visibility_mi":"6.2",
+		"visibility_km":"10.0",
+		"solarradiation":"--",
+		"UV":"0","precip_1hr_string":"0.00 in ( 0 mm)",
+		"precip_1hr_in":"0.00",
+		"precip_1hr_metric":" 0",
+		"precip_today_string":"0.00 in (0 mm)",
+		"precip_today_in":"0.00",
+		"precip_today_metric":"0",
+		"icon":"mostlycloudy",
+		"icon_url":"http://icons.wxug.com/i/c/k/nt_mostlycloudy.gif",
+		"forecast_url":"http://www.wunderground.com/global/stations/06265.html",
+		"history_url":"http://www.wunderground.com/weatherstation/WXDailyHistory.asp?ID=IUTRECHT53",
+		"ob_url":"http://www.wunderground.com/cgi-bin/findweather/getForecast?query=52.172474,5.280017",
+		"nowcast":""
+	}
+}

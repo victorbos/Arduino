@@ -1,0 +1,395 @@
+{
+  "response": {
+  "version":"0.1",
+  "termsofService":"http://www.wunderground.com/weather/api/d/terms.html",
+  "features": {
+  	"forecast": 1
+		}
+	}
+		,
+"forecast":{
+		"txt_forecast": {
+		"date":"8:20 AM CEST",
+		"forecastday": [
+			{
+			"period":0,
+			"icon":"chancerain",
+			"icon_url":"http://icons.wxug.com/i/c/k/chancerain.gif",
+			"title":"zaterdag",
+			"fcttext":"Ochtendbuien. Maximaal 60F. Wind uit het ZZW van 10 tot 15 mpu. Kans op regen 30%.",
+			"fcttext_metric":"Lichte regen in de ochtend. Maximaal 15C. Wind uit het ZZW van 10 tot 15 km/u. Kans op regen 60%.",
+			"pop":"30"
+		}
+		,
+			{
+			"period":1,
+			"icon":"nt_clear",
+			"icon_url":"http://icons.wxug.com/i/c/k/nt_clear.gif",
+			"title":"zaterdagnacht",
+			"fcttext":"Overwegend helder. Minimaal 46F. Wind uit het ZZO van 5 tot 10 mpu.",
+			"fcttext_metric":"Overwegend helder. Minimaal 8C. Wind uit het ZZO van 10 tot 15 km/u.",
+			"pop":"10"
+			}
+		,
+			{
+			"period":2,
+			"icon":"clear",
+			"icon_url":"http://icons.wxug.com/i/c/k/clear.gif",
+			"title":"zondag",
+			"fcttext":"Overwegend helder. Maximaal 66F. Wind uit het ZO van 10 tot 15 mpu.",
+			"fcttext_metric":"Overwegend helder. Maximaal 19C. Wind uit het ZO van 10 tot 15 km/u.",
+			"pop":"10"
+		}
+		,
+		{
+			"period":3,
+			"icon":"nt_chancerain",
+			"icon_url":"http://icons.wxug.com/i/c/k/nt_chancerain.gif",
+			"title":"zondagnacht",
+			"fcttext":"Regenbuien laat in de avond. Minimaal 51F. Wind uit het ZZO van 5 tot 10 mpu. Kans op regen 70%.",
+			"fcttext_metric":"Regenbuien laat in de avond. Minimaal 11C. Wind uit het ZZO van 10 tot 15 km/u. Kans op regen 70%.",
+			"pop":"70"
+		}
+		,
+		{
+			"period":4,
+			"icon":"chancerain",
+			"icon_url":"http://icons.wxug.com/i/c/k/chancerain.gif",
+			"title":"maandag",
+			"fcttext":"Regenbuien. Maximaal 61F. Wind uit het ZZW van 5 tot 10 mpu. Kans op regen 70%.",
+			"fcttext_metric":"Regenbuien. Maximaal 16C. Wind uit het ZZW van 10 tot 15 km/u. Kans op regen 70%.",
+			"pop":"70"
+		}
+		,
+		{
+			"period":5,
+			"icon":"nt_clear",
+			"icon_url":"http://icons.wxug.com/i/c/k/nt_clear.gif",
+			"title":"maandagnacht",
+			"fcttext":"Overwegend helder. Minimaal 47F. Wind uit het ZZW van 5 tot 10 mpu.",
+			"fcttext_metric":"Overwegend helder. Minimaal 9C. Wind uit het ZZW van 10 tot 15 km/u.",
+			"pop":"20"
+		}
+		,
+		{
+			"period":6,
+			"icon":"rain",
+			"icon_url":"http://icons.wxug.com/i/c/k/rain.gif",
+			"title":"dinsdag",
+			"fcttext":"Zich in de middag ontwikkelende regen. Maximaal 58F. Wind uit het ZW van 5 tot 10 mpu. Kans op regen 70%.",
+			"fcttext_metric":"Zich in de middag ontwikkelende regen. Maximaal 15C. Wind uit het ZW van 10 tot 15 km/u. Kans op regen 70%.",
+			"pop":"70"
+		}
+		,
+		{
+			"period":7,
+			"icon":"nt_rain",
+			"icon_url":"http://icons.wxug.com/i/c/k/nt_rain.gif",
+			"title":"dinsdagnacht",
+			"fcttext":"Regen. Minimaal 44F. Windkracht WZW en wisselend. Kans op regen 80%.",
+			"fcttext_metric":"Regen. Minimaal 7C. Windkracht WZW en wisselend. Kans op regen 80%.",
+			"pop":"80"
+		}
+		]
+		},
+	"simpleforecast": {
+		"forecastday": [
+			{"date":{
+				"epoch":"1476550800",
+				"pretty":"7:00 PM CEST op 15 oktober 2016",
+				"day":15,
+				"month":10,
+				"year":2016,
+				"yday":288,
+				"hour":19,
+				"min":"00",
+				"sec":0,
+				"isdst":"1",
+				"monthname":"oktober",
+				"monthname_short":"okt",
+				"weekday_short":"za",
+				"weekday":"zaterdag",
+				"ampm":"PM",
+				"tz_short":"CEST",
+				"tz_long":"Europe/Amsterdam"
+			},
+			"period":1,
+			"high": {
+				"fahrenheit":"60",
+				"celsius":"16"
+				},
+			"low": {
+				"fahrenheit":"46",
+				"celsius":"8"
+				},
+			"conditions":"Kans op regen",
+			"icon":"chancerain",
+			"icon_url":"http://icons.wxug.com/i/c/k/chancerain.gif",
+			"skyicon":"",
+			"pop":30,
+			"qpf_allday": {
+				"in": 0.00,
+				"mm": 0
+				},
+			"qpf_day": {
+				"in": 0.00,
+				"mm": 0
+				},
+			"qpf_night": {
+				"in": 0.00,
+				"mm": 0
+				},
+			"snow_allday": {
+				"in": 0.0,
+				"cm": 0.0
+				},
+			"snow_day": {
+				"in": 0.0,
+				"cm": 0.0
+				},
+			"snow_night": {
+				"in": 0.0,
+				"cm": 0.0
+				},
+			"maxwind": {
+				"mph": 15,
+				"kph": 24,
+				"dir": "ZZW",
+				"degrees": 201
+				},
+			"avewind": {
+				"mph": 10,
+				"kph": 16,
+				"dir": "ZZW",
+				"degrees": 201
+				},
+			"avehumidity": 90,
+			"maxhumidity": 0,
+			"minhumidity": 0
+			}
+		,
+		{"date":{
+			"epoch":"1476637200",
+			"pretty":"7:00 PM CEST op 16 oktober 2016",
+			"day":16,
+			"month":10,
+			"year":2016,
+			"yday":289,
+			"hour":19,
+			"min":"00",
+			"sec":0,
+			"isdst":"1",
+			"monthname":"oktober",
+			"monthname_short":"okt",
+			"weekday_short":"zo",
+			"weekday":"zondag",
+			"ampm":"PM",
+			"tz_short":"CEST",
+			"tz_long":"Europe/Amsterdam"
+			},
+		"period":2,
+		"high": {
+		"fahrenheit":"66",
+		"celsius":"19"
+		},
+		"low": {
+		"fahrenheit":"51",
+		"celsius":"11"
+		},
+		"conditions":"Helder",
+		"icon":"clear",
+		"icon_url":"http://icons.wxug.com/i/c/k/clear.gif",
+		"skyicon":"",
+		"pop":10,
+		"qpf_allday": {
+		"in": 0.04,
+		"mm": 1
+		},
+		"qpf_day": {
+		"in": 0.00,
+		"mm": 0
+		},
+		"qpf_night": {
+		"in": 0.04,
+		"mm": 1
+		},
+		"snow_allday": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"snow_day": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"snow_night": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"maxwind": {
+		"mph": 15,
+		"kph": 24,
+		"dir": "ZO",
+		"degrees": 143
+		},
+		"avewind": {
+		"mph": 10,
+		"kph": 16,
+		"dir": "ZO",
+		"degrees": 143
+		},
+		"avehumidity": 73,
+		"maxhumidity": 0,
+		"minhumidity": 0
+		}
+		,
+		{"date":{
+	"epoch":"1476723600",
+	"pretty":"7:00 PM CEST op 17 oktober 2016",
+	"day":17,
+	"month":10,
+	"year":2016,
+	"yday":290,
+	"hour":19,
+	"min":"00",
+	"sec":0,
+	"isdst":"1",
+	"monthname":"oktober",
+	"monthname_short":"okt",
+	"weekday_short":"ma",
+	"weekday":"maandag",
+	"ampm":"PM",
+	"tz_short":"CEST",
+	"tz_long":"Europe/Amsterdam"
+},
+		"period":3,
+		"high": {
+		"fahrenheit":"61",
+		"celsius":"16"
+		},
+		"low": {
+		"fahrenheit":"47",
+		"celsius":"8"
+		},
+		"conditions":"Kans op regen",
+		"icon":"chancerain",
+		"icon_url":"http://icons.wxug.com/i/c/k/chancerain.gif",
+		"skyicon":"",
+		"pop":70,
+		"qpf_allday": {
+		"in": 0.10,
+		"mm": 3
+		},
+		"qpf_day": {
+		"in": 0.10,
+		"mm": 3
+		},
+		"qpf_night": {
+		"in": 0.00,
+		"mm": 0
+		},
+		"snow_allday": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"snow_day": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"snow_night": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"maxwind": {
+		"mph": 10,
+		"kph": 16,
+		"dir": "ZZW",
+		"degrees": 199
+		},
+		"avewind": {
+		"mph": 7,
+		"kph": 11,
+		"dir": "ZZW",
+		"degrees": 199
+		},
+		"avehumidity": 89,
+		"maxhumidity": 0,
+		"minhumidity": 0
+		}
+		,
+		{"date":{
+	"epoch":"1476810000",
+	"pretty":"7:00 PM CEST op 18 oktober 2016",
+	"day":18,
+	"month":10,
+	"year":2016,
+	"yday":291,
+	"hour":19,
+	"min":"00",
+	"sec":0,
+	"isdst":"1",
+	"monthname":"oktober",
+	"monthname_short":"okt",
+	"weekday_short":"di",
+	"weekday":"dinsdag",
+	"ampm":"PM",
+	"tz_short":"CEST",
+	"tz_long":"Europe/Amsterdam"
+},
+		"period":4,
+		"high": {
+		"fahrenheit":"58",
+		"celsius":"14"
+		},
+		"low": {
+		"fahrenheit":"44",
+		"celsius":"7"
+		},
+		"conditions":"Regen",
+		"icon":"rain",
+		"icon_url":"http://icons.wxug.com/i/c/k/rain.gif",
+		"skyicon":"",
+		"pop":70,
+		"qpf_allday": {
+		"in": 0.30,
+		"mm": 8
+		},
+		"qpf_day": {
+		"in": 0.15,
+		"mm": 4
+		},
+		"qpf_night": {
+		"in": 0.15,
+		"mm": 4
+		},
+		"snow_allday": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"snow_day": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"snow_night": {
+		"in": 0.0,
+		"cm": 0.0
+		},
+		"maxwind": {
+		"mph": 10,
+		"kph": 16,
+		"dir": "ZW",
+		"degrees": 215
+		},
+		"avewind": {
+		"mph": 9,
+		"kph": 14,
+		"dir": "ZW",
+		"degrees": 215
+		},
+		"avehumidity": 88,
+		"maxhumidity": 0,
+		"minhumidity": 0
+		}
+		]
+		}
+	}
+}
