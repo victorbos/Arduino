@@ -1,3 +1,11 @@
+// Weerstation met LCD
+//
+// Connections:
+// Red led on D5
+// Blue led on D6
+// LCD: SCL on D3, SDA on D4, VCC: 5V
+
+
 #include <ESP8266WiFi.h>
 #include <ArduinoJson.h>
 #include <Wire.h>
@@ -57,12 +65,14 @@ const int wifiLedPin = D5;
 const int dataLedPin = D6;
 
 WiFiClient wifiClient;
-String response;
+char response [8192];
 
 LiquidCrystal_I2C lcd(0x27, 2, 16);
 
 
 void setup() {
+  Serial.begin(115200);
+  
   pinMode(wifiLedPin, OUTPUT);
   pinMode(dataLedPin, OUTPUT);
   lcd.init();
@@ -85,7 +95,6 @@ void loop() {
 
   if (lastUpdateForecast == intervalForecast ) {
     printLcd("Bijwerken", "verwachtingen...");
-    Serial.println("Updating forecast...");
     updateForecast();
     lastUpdateForecast = 0;
   }
@@ -222,10 +231,12 @@ void getResponse() {
   while (!wifiClient.available()) {
     delay(1000);
   }
-
-  response = "";
-
+  for( int i = 0; i < sizeof(response);  i++ ) {
+    response[i] = char(0); 
+  }
+    
   char c;
+  int count = 0;
   int openBracketCount = 0;
   int closeBracketCount = 0;
   boolean inJson = false;
@@ -240,12 +251,13 @@ void getResponse() {
       closeBracketCount++;
     }
     if (inJson) {
-      response = response + c;
+      response[count] = c;
+      count++;
     }
     if (openBracketCount == closeBracketCount) {
       inJson = false;
     }
-    delay(2);
+//    delay(2);
   }
 }
 
@@ -283,11 +295,11 @@ void parseAstronomy() {
   }
 
   String version = root["response"]["version"];
-  
+
   weatherData[a_sunRise] = String("zon op ") + root["sun_phase"]["sunrise"]["hour"].asString()
-                         + ":" + root["sun_phase"]["sunrise"]["minute"].asString();
+                           + ":" + root["sun_phase"]["sunrise"]["minute"].asString();
   weatherData[a_sunSet] = String("zon onder ") + root["sun_phase"]["sunset"]["hour"].asString()
-                         + ":" + root["sun_phase"]["sunset"]["minute"].asString();
+                          + ":" + root["sun_phase"]["sunset"]["minute"].asString();
 
   digitalWrite(dataLedPin, HIGH);
 }
@@ -302,23 +314,23 @@ void parseForecast() {
   }
 
   String version = root["response"]["version"];
-  weatherData[f_temp_0] = String("vandaag ") + 
-    root["forecast"]["simpleforecast"]["forecastday"][0]["low"]["celsius"].asString() + "-" +
-    root["forecast"]["simpleforecast"]["forecastday"][0]["high"]["celsius"].asString() + String(char(223)) + "C";
+  weatherData[f_temp_0] = String("vandaag ") +
+                          root["forecast"]["simpleforecast"]["forecastday"][0]["low"]["celsius"].asString() + "-" +
+                          root["forecast"]["simpleforecast"]["forecastday"][0]["high"]["celsius"].asString() + String(char(223)) + "C";
   weatherData[f_weather_0] = root["forecast"]["simpleforecast"]["forecastday"][0]["conditions"].asString();
-  weatherData[f_wind_0] = String("wind ") + 
-    root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["dir"].asString() + " " +
-    root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["kph"].asString();
+  weatherData[f_wind_0] = String("wind ") +
+                          root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["dir"].asString() + " " +
+                          root["forecast"]["simpleforecast"]["forecastday"][0]["avewind"]["kph"].asString();
   weatherData[f_rain_0] = String("regen ") + root["forecast"]["simpleforecast"]["forecastday"][0]["pop"].asString() + "%";
 
-  weatherData[f_temp_1] = String("morgen ") + 
-    root["forecast"]["simpleforecast"]["forecastday"][1]["low"]["celsius"].asString() + "-" +
-    root["forecast"]["simpleforecast"]["forecastday"][1]["high"]["celsius"].asString()  + String(char(223)) + "C";
+  weatherData[f_temp_1] = String("morgen ") +
+                          root["forecast"]["simpleforecast"]["forecastday"][1]["low"]["celsius"].asString() + "-" +
+                          root["forecast"]["simpleforecast"]["forecastday"][1]["high"]["celsius"].asString()  + String(char(223)) + "C";
   weatherData[f_weather_1] = root["forecast"]["simpleforecast"]["forecastday"][1]["conditions"].asString();
-  weatherData[f_wind_1] = String("wind ") + 
-    root["forecast"]["simpleforecast"]["forecastday"][1]["avewind"]["dir"].asString() + " " +
-    root["forecast"]["simpleforecast"]["forecastday"][1]["avewind"]["kph"].asString() ;
-  weatherData[f_rain_1] = String("regen ") + root["forecast"]["simpleforecast"]["forecastday"][1]["pop"].asString() +"%";
+  weatherData[f_wind_1] = String("wind ") +
+                          root["forecast"]["simpleforecast"]["forecastday"][1]["avewind"]["dir"].asString() + " " +
+                          root["forecast"]["simpleforecast"]["forecastday"][1]["avewind"]["kph"].asString() ;
+  weatherData[f_rain_1] = String("regen ") + root["forecast"]["simpleforecast"]["forecastday"][1]["pop"].asString() + "%";
 
   digitalWrite(dataLedPin, HIGH);
 }
@@ -331,3 +343,9 @@ void printLcd(String msg1, String msg2) {
   lcd.setCursor(0, 1);
   lcd.print(msg2);
 }
+
+void printSerial(String msg1, String msg2) {
+  Serial.print(msg1);
+  Serial.println(msg2);
+}
+
