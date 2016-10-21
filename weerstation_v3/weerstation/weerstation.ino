@@ -46,7 +46,8 @@ const char* WIFI_PWD = "duivendak";
 
 
 // Setup
-const int UPDATE_INTERVAL_SECS = 10 * 60; // Update every 10 minutes
+const int UPDATE_INTERVAL_CONDITIONS = 10 * 60; // Update conditions every 10 minutes
+const int UPDATE_INTERVAL_FORECAST = 60 * 60;   // Update every forecast every 60 minutes
 
 // Display Settings
 const int I2C_DISPLAY_ADDRESS = 0x3c;
@@ -78,11 +79,13 @@ TimeClient timeClient(UTC_OFFSET);
 WundergroundClient wunderground(IS_METRIC);
 
 // flag changed in the ticker function every 10 minutes
-bool readyForWeatherUpdate = false;
+bool readyForConditionsUpdate = true;
+bool readyForForecastUpdate = true;
 
 String lastUpdate = "--";
 
-Ticker ticker;
+Ticker tickerConditions;
+Ticker tickerForecast;
 
 //declaring prototypes
 void drawProgress(OLEDDisplay *display, int percentage, String label);
@@ -94,7 +97,8 @@ void drawForecastTomorrow(OLEDDisplay *display, OLEDDisplayUiState* state, int16
 void drawForecastDayAfterTomorrow(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, int dayIndex);
 void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState* state);
-void setReadyForWeatherUpdate();
+void setReadyForConditionsUpdate();
+void setReadyForForecastUpdate();
 
 
 // Add frames
@@ -144,14 +148,14 @@ void setup() {
 
   // You can change this to
   // TOP, LEFT, BOTTOM, RIGHT
-  ui.setIndicatorPosition(BOTTOM);
+  ui.setIndicatorPosition(RIGHT);
 
   // Defines where the first frame is located in the bar.
   ui.setIndicatorDirection(LEFT_RIGHT);
 
   // You can change the transition that is used
   // SLIDE_LEFT, SLIDE_RIGHT, SLIDE_TOP, SLIDE_DOWN
-  ui.setFrameAnimation(SLIDE_LEFT);
+  ui.setFrameAnimation(SLIDE_DOWN);
 
   ui.setFrames(frames, numberOfFrames);
 
@@ -164,12 +168,13 @@ void setup() {
 
   updateData(&display);
 
-  ticker.attach(UPDATE_INTERVAL_SECS, setReadyForWeatherUpdate);
-
+  tickerConditions.attach(UPDATE_INTERVAL_CONDITIONS, setReadyForConditionsUpdate);
+  tickerForecast.attach(UPDATE_INTERVAL_FORECAST, setReadyForForecastUpdate);
 }
 
 void loop() {
-  if (readyForWeatherUpdate && ui.getUiState()->frameState == FIXED) {
+  if ((readyForConditionsUpdate || readyForForecastUpdate) 
+      && ui.getUiState()->frameState == FIXED) {
     updateData(&display);
   }
 
@@ -181,8 +186,6 @@ void loop() {
     // time budget.
     delay(remainingTimeBudget);
   }
-
-
 }
 
 void drawProgress(OLEDDisplay *display, int percentage, String label) {
@@ -198,17 +201,22 @@ void updateData(OLEDDisplay *display) {
   drawProgress(display, 15, "Updating time...");
   timeClient.updateTime();
 
-  drawProgress(display, 30, "Updating astronomy...");
-  wunderground.updateAstronomy(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);
+  if (readyForConditionsUpdate) {
+    drawProgress(display, 30, "Updating conditions...");
+    wunderground.updateConditions(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);  
+    readyForConditionsUpdate = false;
+  }
   
-  drawProgress(display, 50, "Updating conditions...");
-  wunderground.updateConditions(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);
-  
-  drawProgress(display, 70, "Updating forecasts...");
-  wunderground.updateForecast(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);
+  if (readyForForecastUpdate) {
+    drawProgress(display, 50, "Updating astronomy...");
+    wunderground.updateAstronomy(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);
+    drawProgress(display, 70, "Updating forecasts...");
+    wunderground.updateForecast(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);
+    readyForForecastUpdate = false;
+  }
   
   lastUpdate = timeClient.getFormattedTime();
-  readyForWeatherUpdate = false;
+
   drawProgress(display, 100, "Done...");
   delay(1000);
 }
@@ -222,40 +230,43 @@ void drawDateTime(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, in
   String date = wunderground.getDate();
   display->drawString(64 + x, y, date);
   
-  display->setFont(ArialMT_Plain_16);
+  display->setFont(ArialMT_Plain_24);
   String time = timeClient.getFormattedTime();
-  display->drawString(64 + x, 13 + y, time);
+  display->drawString(64 + x, 20 + y, time);
   
   display->setFont(ArialMT_Plain_10);
   String sunRise = wunderground.getSunriseTime();
   String sunSet  = wunderground.getSunsetTime();
   String sunRiseSet = sunRise + " - " + sunSet;
-  display->drawString(64 + x, 31 + y, sunRiseSet);
+  display->drawString(64 + x, 54 + y, sunRiseSet);
   
   display->setTextAlignment(TEXT_ALIGN_LEFT);
 }
 
 void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(Meteocons_Plain_21);
+  display->setFont(Meteocons_Plain_42);
   String weatherIcon = wunderground.getTodayIcon();
-  display->drawString(x, 0, weatherIcon);
+  display->drawString(x, y, weatherIcon);
   
   display->setFont(ArialMT_Plain_16);
   String temp = wunderground.getCurrentTemp() + "°C";
-  display->drawString(x, 32 + y, temp);
+  display->drawString(x, 48 + y, temp);
   
   
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  display->drawString(128 + x, y, wunderground.getCity());
-  display->drawString(128 + x, y + 12, wunderground.getWeatherText());
+  display->drawString(116 + x, y, wunderground.getCity());
+  
+  String weather = wunderground.getWeatherText() ;
+  display->drawString(116 + x, y + 12, firstWord(weather));
+  display->drawString(116 + x, y + 24, secondWord(weather));
 
   String wind = wunderground.getWindDir() + " " + wunderground.getWindSpeedBft();
   wind.toLowerCase();
-  display->drawString(128 + x, 24 + y, wind);
+  display->drawString(116 + x, 42 + y, wind);
 
-  display->drawString(128 + x, 36 + y, wunderground.getPrecipitationToday());
+  display->drawString(116 + x, 54 + y, wunderground.getPrecipitationToday());
 }
 
 void drawForecastToday(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -272,51 +283,61 @@ void drawForecastDayAfterTomorrow(OLEDDisplay *display, OLEDDisplayUiState* stat
 
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, int dayIndex) {
   display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->setFont(Meteocons_Plain_21);
+  display->setFont(Meteocons_Plain_42);
   String weatherIcon = wunderground.getForecastIcon(dayIndex);
   display->drawString(x, y, weatherIcon);
 
   display->setFont(ArialMT_Plain_16);
-  display->drawString(x, 32 + y, wunderground.getForecastLowTemp(dayIndex) + "-" + wunderground.getForecastHighTemp(0) + "°C");
+  display->drawString(x, 48 + y, wunderground.getForecastLowTemp(dayIndex) + "-" + wunderground.getForecastHighTemp(0) + "°C");
 
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   
-  display->drawString(128 + x, 0, wunderground.getForecastTitle(dayIndex));
-  display->drawString(128 + x, y + 12, wunderground.getForecastConditions(dayIndex));
-  display->drawString(128 + x, y + 24, wunderground.getForecastWindDir(dayIndex) + " " + wunderground.getForecastWindSpeedBft(dayIndex));
-  display->drawString(128 + x, y + 36, wunderground.getForecastPop(dayIndex));
-}
-
-void drawForecastDetails(OLEDDisplay *display, int x, int y, int dayIndex) {
-  display->setTextAlignment(TEXT_ALIGN_CENTER);
-  display->setFont(ArialMT_Plain_10);
-  String day = wunderground.getForecastTitle(dayIndex).substring(0, 3);
-  day.toUpperCase();
-  display->drawString(x + 20, y, day);
-
-  display->setFont(Meteocons_Plain_21);
-  display->drawString(x + 20, y + 12, wunderground.getForecastIcon(dayIndex));
-
-  display->setFont(ArialMT_Plain_10);
-  display->drawString(x + 20, y + 34, wunderground.getForecastLowTemp(dayIndex) + "|" + wunderground.getForecastHighTemp(dayIndex));
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawString(116 + x, y, wunderground.getForecastTitle(dayIndex));
+  
+  String weather = wunderground.getForecastConditions(dayIndex);
+  display->drawString(116 + x, y + 12, firstWord(weather));
+  display->drawString(116 + x, y + 24, secondWord(weather));
+  
+  display->drawString(116 + x, y + 42, wunderground.getForecastWindDir(dayIndex) + " " + wunderground.getForecastWindSpeedBft(dayIndex));
+  display->drawString(116 + x, y + 54, wunderground.getForecastPop(dayIndex));
 }
 
 void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
-  display->setColor(WHITE);
-  display->setFont(ArialMT_Plain_10);
-  String time = timeClient.getFormattedTime().substring(0, 5);
-  display->setTextAlignment(TEXT_ALIGN_LEFT);
-  display->drawString(0, 54, time);
-  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  String temp = wunderground.getCurrentTemp() ;
-  display->drawString(128, 54, temp);
-  display->drawHorizontalLine(0, 52, 128);
+//  display->setColor(WHITE);
+//  display->setFont(ArialMT_Plain_10);
+//  String time = timeClient.getFormattedTime().substring(0, 5);
+//  display->setTextAlignment(TEXT_ALIGN_LEFT);
+//  display->drawString(0, 54, time);
+//  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+//  String temp = wunderground.getCurrentTemp() ;
+//  display->drawString(128, 54, temp);
+//  display->drawHorizontalLine(0, 52, 128);
 }
 
-void setReadyForWeatherUpdate() {
-  Serial.println("Setting readyForUpdate to true");
-  readyForWeatherUpdate = true;
+void setReadyForConditionsUpdate() {
+  readyForConditionsUpdate = true;
+}
+
+void setReadyForForecastUpdate() {
+  readyForForecastUpdate = true;
+}
+
+String firstWord(String input){
+  int index = input.indexOf(' ');
+  if (index > 0) {
+    return input.substring(0, index);
+  } else {
+    return input ;
+  }
+}
+
+String secondWord(String input){
+  int index = input.indexOf(' ');
+  if (index > 0) {
+    return input.substring(index);
+  } else {
+    return "" ;
+  }
 }
 
