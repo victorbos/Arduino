@@ -257,7 +257,7 @@ void getResponse() {
     if (openBracketCount == closeBracketCount) {
       inJson = false;
     }
-//    delay(2);
+    delay(1);
   }
 }
 
@@ -272,7 +272,7 @@ void parseConditions() {
   }
 
   weatherData[conditions] = String("Waarnemingen ");
-  weatherData[c_city] = root["current_observation"]["display_location"]["city"].asString();
+  weatherData[c_city] = root["current_observation"]["display_location"]["full"].asString();
   weatherData[c_temp] = String("temp ") + root["current_observation"]["temp_c"].asString() + String(char(223)) + "C";
   weatherData[c_tempFeels] = String("voelt als ") + root["current_observation"]["feelslike_c"].asString()  + String(char(223)) + "C";
   weatherData[c_weather] = root["current_observation"]["weather"].asString();
