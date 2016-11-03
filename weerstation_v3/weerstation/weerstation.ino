@@ -1,26 +1,26 @@
 /**The MIT License (MIT)
 
-Copyright (c) 2016 by Daniel Eichhorn
+  Copyright (c) 2016 by Daniel Eichhorn
 
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
+  Permission is hereby granted, free of charge, to any person obtaining a copy
+  of this software and associated documentation files (the "Software"), to deal
+  in the Software without restriction, including without limitation the rights
+  to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+  copies of the Software, and to permit persons to whom the Software is
+  furnished to do so, subject to the following conditions:
 
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
+  The above copyright notice and this permission notice shall be included in all
+  copies or substantial portions of the Software.
 
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+  THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+  IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+  FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+  AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+  LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+  OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+  SOFTWARE.
 
-See more at http://blog.squix.ch
+  See more at http://blog.squix.ch
 */
 
 #include <ESP8266WiFi.h>
@@ -33,9 +33,11 @@ See more at http://blog.squix.ch
 #include "WeatherStationFonts.h"
 #include "WeatherStationImages.h"
 #include "TimeClient.h"
+#include "DhtClient.h"
+#include "ThingSpeakClient.h"
 
 /***************************
- * Begin Settings
+   Begin Settings
  **************************/
 // Please read http://blog.squix.org/weatherstation-getting-code-adapting-it
 // for setup instructions
@@ -44,10 +46,15 @@ See more at http://blog.squix.ch
 const char* WIFI_SSID = "Ziggo68968";
 const char* WIFI_PWD = "duivendak";
 
+// ThingSpeak
+const unsigned long THINGSPEAK_CHANNEL = 173961;
+const String THINGSPEAK_WRITE_KEY = "VGUGDB77WB036WIC";
 
 // Setup
+const int UPDATE_INTERVAL_ROOM = 1 * 60;        // Update room every minute
 const int UPDATE_INTERVAL_CONDITIONS = 10 * 60; // Update conditions every 10 minutes
 const int UPDATE_INTERVAL_FORECAST = 60 * 60;   // Update every forecast every 60 minutes
+const int WRITE_THINGSPEAK_INTERVAL = 10 * 60;  // Write temp and humidity to thingspeak every 10 minutes
 
 // Display Settings
 const int I2C_DISPLAY_ADDRESS = 0x3c;
@@ -55,7 +62,7 @@ const int SDA_PIN = D2;
 const int SDC_PIN = D1;
 
 // TimeClient settings
-const float UTC_OFFSET = 2;
+const float UTC_OFFSET = 1;
 
 // Wunderground Settings
 const boolean IS_METRIC = true;
@@ -69,8 +76,12 @@ const String WUNDERGROUND_CITY = "Soest";
 SSD1306Wire     display(I2C_DISPLAY_ADDRESS, SDA_PIN, SDC_PIN);
 OLEDDisplayUi   ui( &display );
 
+// DHT sensor
+const int DHT_PIN = D4;
+const int DHT_TYPE = DHT22;
+
 /***************************
- * End Settings
+   End Settings
  **************************/
 
 TimeClient timeClient(UTC_OFFSET);
@@ -78,14 +89,19 @@ TimeClient timeClient(UTC_OFFSET);
 // Set to false, if you prefere imperial/inches, Fahrenheit
 WundergroundClient wunderground(IS_METRIC);
 
-// flag changed in the ticker function every 10 minutes
+DhtClient dhtClient(DHT_PIN, DHT_TYPE);
+ThingSpeakClient thingSpeakClient;
+
+// flag changed in the ticker function
+bool readyForRoomUpdate = true;
 bool readyForConditionsUpdate = true;
 bool readyForForecastUpdate = true;
+bool readyForThingSpeak = true;
 
-String lastUpdate = "--";
-
+Ticker tickerRoom;
 Ticker tickerConditions;
 Ticker tickerForecast;
+Ticker tickerThingSpeak;
 
 //declaring prototypes
 void drawProgress(OLEDDisplay *display, int percentage, String label);
@@ -96,19 +112,20 @@ void drawForecastToday(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t 
 void drawForecastTomorrow(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawForecastDayAfterTomorrow(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y);
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, int dayIndex);
-void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState* state);
+void setReadyForRoomUpdate();
 void setReadyForConditionsUpdate();
 void setReadyForForecastUpdate();
+void setReadyForThingSpeak();
 
 
 // Add frames
 // this array keeps function pointers to all frames
 // frames are the single views that slide from right to left
-FrameCallback frames[] = { drawDateTime , drawCurrentWeather , drawForecastToday, drawForecastTomorrow, drawForecastDayAfterTomorrow };
-int numberOfFrames = 5;
+FrameCallback frames[] = { drawDateTime , drawCurrentWeather , drawForecastToday, drawForecastTomorrow };
+int numberOfFrames = 4;
 
-OverlayCallback overlays[] = { drawHeaderOverlay };
-int numberOfOverlays = 1;
+OverlayCallback overlays[] = {  };
+int numberOfOverlays = 0;
 
 void setup() {
   Serial.begin(115200);
@@ -168,12 +185,14 @@ void setup() {
 
   updateData(&display);
 
+  tickerRoom.attach(UPDATE_INTERVAL_ROOM, setReadyForRoomUpdate);
   tickerConditions.attach(UPDATE_INTERVAL_CONDITIONS, setReadyForConditionsUpdate);
   tickerForecast.attach(UPDATE_INTERVAL_FORECAST, setReadyForForecastUpdate);
+  tickerThingSpeak.attach(WRITE_THINGSPEAK_INTERVAL, setReadyForThingSpeak);
 }
 
 void loop() {
-  if ((readyForConditionsUpdate || readyForForecastUpdate) 
+  if ((readyForRoomUpdate || readyForConditionsUpdate || readyForForecastUpdate)
       && ui.getUiState()->frameState == FIXED) {
     updateData(&display);
   }
@@ -185,6 +204,10 @@ void loop() {
     // Don't do stuff if you are below your
     // time budget.
     delay(remainingTimeBudget);
+  }
+
+  if (readyForThingSpeak) {
+    writeToThingSpeak();
   }
 }
 
@@ -198,15 +221,19 @@ void drawProgress(OLEDDisplay *display, int percentage, String label) {
 }
 
 void updateData(OLEDDisplay *display) {
-  drawProgress(display, 15, "Updating time...");
-  timeClient.updateTime();
+  if (readyForRoomUpdate) {
+    dhtClient.updateData();
+    readyForRoomUpdate = false;
+  }
 
   if (readyForConditionsUpdate) {
+    drawProgress(display, 10, "Updating time...");
+    timeClient.updateTime();
     drawProgress(display, 30, "Updating conditions...");
-    wunderground.updateConditions(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);  
+    wunderground.updateConditions(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);
     readyForConditionsUpdate = false;
   }
-  
+
   if (readyForForecastUpdate) {
     drawProgress(display, 50, "Updating astronomy...");
     wunderground.updateAstronomy(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);
@@ -214,33 +241,32 @@ void updateData(OLEDDisplay *display) {
     wunderground.updateForecast(WUNDERGRROUND_API_KEY, WUNDERGRROUND_LANGUAGE, WUNDERGROUND_COUNTRY, WUNDERGROUND_CITY);
     readyForForecastUpdate = false;
   }
-  
-  lastUpdate = timeClient.getFormattedTime();
 
-  drawProgress(display, 100, "Done...");
-  delay(1000);
+  if (readyForConditionsUpdate || readyForForecastUpdate) {
+    drawProgress(display, 100, "Done...");
+    delay(1000);
+  }
 }
 
 
 
 void drawDateTime(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
   display->setTextAlignment(TEXT_ALIGN_CENTER);
-  
-  display->setFont(ArialMT_Plain_10);
-  String date = wunderground.getDate();
-  display->drawString(64 + x, y, date);
-  
   display->setFont(ArialMT_Plain_24);
   String time = timeClient.getFormattedTime();
-  display->drawString(64 + x, 20 + y, time);
-  
+  display->drawString(64 + x, y, time);
+
   display->setFont(ArialMT_Plain_10);
   String sunRise = wunderground.getSunriseTime();
   String sunSet  = wunderground.getSunsetTime();
   String sunRiseSet = sunRise + " - " + sunSet;
-  display->drawString(64 + x, 54 + y, sunRiseSet);
-  
+  display->drawString(64 + x, 29 + y, sunRiseSet);
+
+  display->setFont(ArialMT_Plain_16);
   display->setTextAlignment(TEXT_ALIGN_LEFT);
+  display->drawString(x, 48 + y, dhtClient.getTemperatureAsString());
+  display->setTextAlignment(TEXT_ALIGN_RIGHT);
+  display->drawString(116 + x, 48 + y, dhtClient.getHumidityAsString());
 }
 
 void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
@@ -248,16 +274,16 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t
   display->setFont(Meteocons_Plain_42);
   String weatherIcon = wunderground.getTodayIcon();
   display->drawString(x, y, weatherIcon);
-  
+
   display->setFont(ArialMT_Plain_16);
   String temp = wunderground.getCurrentTemp() + "°C";
   display->drawString(x, 48 + y, temp);
-  
-  
+
+
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
   display->drawString(116 + x, y, wunderground.getCity());
-  
+
   String weather = wunderground.getWeatherText() ;
   display->drawString(116 + x, y + 12, firstWord(weather));
   display->drawString(116 + x, y + 24, secondWord(weather));
@@ -270,15 +296,19 @@ void drawCurrentWeather(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t
 }
 
 void drawForecastToday(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  drawForecast( display, state, x, y, 0);
+  if (timeClient.getHours() < "12") {
+    drawForecast( display, state, x, y, 0);
+  } else {
+    drawForecast( display, state, x, y, 2);
+  }
 }
 
 void drawForecastTomorrow(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  drawForecast( display, state, x, y, 2);
-}
-
-void drawForecastDayAfterTomorrow(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y) {
-  drawForecast( display, state, x, y, 4);
+  if (timeClient.getHours() < "12") {
+    drawForecast( display, state, x, y, 2);
+  } else {
+    drawForecast( display, state, x, y, 4);
+  }
 }
 
 void drawForecast(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, int16_t y, int dayIndex) {
@@ -292,27 +322,29 @@ void drawForecast(OLEDDisplay *display, OLEDDisplayUiState* state, int16_t x, in
 
   display->setFont(ArialMT_Plain_10);
   display->setTextAlignment(TEXT_ALIGN_RIGHT);
-  
+
   display->drawString(116 + x, y, wunderground.getForecastTitle(dayIndex));
-  
+
   String weather = wunderground.getForecastConditions(dayIndex);
   display->drawString(116 + x, y + 12, firstWord(weather));
   display->drawString(116 + x, y + 24, secondWord(weather));
-  
+
   display->drawString(116 + x, y + 42, wunderground.getForecastWindDir(dayIndex) + " " + wunderground.getForecastWindSpeedBft(dayIndex));
   display->drawString(116 + x, y + 54, wunderground.getForecastPop(dayIndex));
 }
 
-void drawHeaderOverlay(OLEDDisplay *display, OLEDDisplayUiState* state) {
-//  display->setColor(WHITE);
-//  display->setFont(ArialMT_Plain_10);
-//  String time = timeClient.getFormattedTime().substring(0, 5);
-//  display->setTextAlignment(TEXT_ALIGN_LEFT);
-//  display->drawString(0, 54, time);
-//  display->setTextAlignment(TEXT_ALIGN_RIGHT);
-//  String temp = wunderground.getCurrentTemp() ;
-//  display->drawString(128, 54, temp);
-//  display->drawHorizontalLine(0, 52, 128);
+
+void writeToThingSpeak() {
+  Serial.println("Writing temperature and humidity to ThingSpeak");
+  float temperature = dhtClient.getTemperature();
+  float humidity = dhtClient.getHumidity();
+  thingSpeakClient.writeTempHum(THINGSPEAK_CHANNEL, THINGSPEAK_WRITE_KEY, temperature, humidity) ;
+  
+  readyForThingSpeak = false;
+}
+
+void setReadyForRoomUpdate() {
+  readyForRoomUpdate = true;
 }
 
 void setReadyForConditionsUpdate() {
@@ -323,7 +355,11 @@ void setReadyForForecastUpdate() {
   readyForForecastUpdate = true;
 }
 
-String firstWord(String input){
+void setReadyForThingSpeak() {
+  readyForThingSpeak = true;
+}
+
+String firstWord(String input) {
   int index = input.indexOf(' ');
   if (index > 0) {
     return input.substring(0, index);
@@ -332,7 +368,7 @@ String firstWord(String input){
   }
 }
 
-String secondWord(String input){
+String secondWord(String input) {
   int index = input.indexOf(' ');
   if (index > 0) {
     return input.substring(index);
